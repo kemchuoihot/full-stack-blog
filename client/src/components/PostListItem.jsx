@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Image from "./Image";
 import { format as formatDate, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -9,13 +9,21 @@ import viLocale from "timeago.js/lib/lang/vi";
 register("vi", viLocale);
 
 const PostListItem = ({ post }) => {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const handleCategoryClick = (category) => {
+    setSearchParams({ cat: category });
+    navigate(`/posts?cat=${category}`);
+  };
+
   return (
     <div className="flex flex-col xl:flex-row gap-8 mb-12">
       {/* image */}
       {post.img && (
-        <div className="md:hidden xl:block xl:w-1/4">
-          <Image src={post.img} className="rounded-2xl object-cover" />
-        </div>
+        <Link to={`/${post.slug}`} className="md:hidden xl:block xl:w-1/4">
+          <Image src={post.img} className="rounded-2xl object-cover w-full h-48" />
+        </Link>
       )}
       {/* details */}
       <div className="flex flex-col gap-4 xl:w-3/4">
@@ -25,22 +33,25 @@ const PostListItem = ({ post }) => {
         <div className="flex flex-col gap-2 text-gray-400 text-sm">
           <div className="">
             <span>Được viết bởi:</span>
-            <span className="ml-3 md:ml-0 text-blue-800">
+            <span className="ml-3 text-blue-800">
               PX Nguyễn Văn Thượng
             </span>
-          </div>
-          <div className="">
-            <span className="mr-3 md:mr-0">Thư Mục:</span>
-            <Link className="text-blue-800">{post.category}</Link>
-          </div>
-          <div className="">
-            <span className="mr-3 md:mr-0">
+            <span className="mr-3 ml-3">
               ({formatTimeAgo(post.createdAt, "vi")})
             </span>
             <span>
               {formatDate(parseISO(post.createdAt), "dd MMMM yyyy", {
                 locale: vi,
               })}
+            </span>
+          </div>
+          <div className="">
+            <span className="mr-3">Thư Mục:</span>
+            <span
+              className="text-blue-800 cursor-pointer"
+              onClick={() => handleCategoryClick(post.category)}
+            >
+              {post.category}
             </span>
           </div>
         </div>

@@ -1,145 +1,88 @@
-// import { Link, useParams } from "react-router-dom";
-import { Link } from "react-router";
-import Image from "../components/Image";
-import PostMenuAction from "../components/PostMenuAction";
-// import PostMenuActions from "../components/PostMenuActions";
-// import Search from "../components/Search";
-// import Comments from "../components/Comments";
-// import axios from "axios";
-// import { useQuery } from "@tanstack/react-query";
-// import { format } from "timeago.js";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { vi } from "date-fns/locale";
+import { format as formatDate, parseISO } from "date-fns";
+import { format as formatTimeAgo, register } from "timeago.js";
+import viLocale from "timeago.js/lib/lang/vi";
 
-// const fetchPost = async (slug) => {
-//   const res = await axios.get(`${import.meta.env.VITE_API_URL}/posts/${slug}`);
-//   return res.data;
-// };
+import Image from "../components/Image";
+import axios from "axios";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useUser } from "@clerk/clerk-react"; // Import useUser từ @clerk/clerk-react
+import SideMenu from "../components/SideMenu";
+
+// Đăng ký ngôn ngữ tiếng Việt cho timeago.js
+register('vi', viLocale);
+
+const fetchPost = async (slug) => {
+  const res = await axios.get(`${import.meta.env.VITE_API_URL}/posts/${slug}`);
+  return res.data;
+};
 
 const SinglePostPage = () => {
-  // const { slug } = useParams();
+  const { slug } = useParams();
+  const { isLoaded, isSignedIn } = useUser(); // Sử dụng useUser để kiểm tra trạng thái đăng nhập
+  const navigate = useNavigate();
 
-  // const { isPending, error, data } = useQuery({
-  //   queryKey: ["post", slug],
-  //   queryFn: () => fetchPost(slug),
-  // });
+  const { isPending, error, data } = useQuery({
+    queryKey: ["post", slug],
+    queryFn: () => fetchPost(slug),
+  });
 
-  // if (isPending) return "loading...";
-  // if (error) return "Something went wrong!" + error.message;
-  // if (!data) return "Post not found!";
+  const deleteMutation = useMutation({
+    mutationFn: async (postId) => {
+      return axios.delete(`${import.meta.env.VITE_API_URL}/posts/${postId}`);
+    },
+    onSuccess: () => {
+      navigate("/");
+    },
+  });
+
+  const handleDelete = () => {
+    if (data && data._id) {
+      const confirmed = window.confirm("Bạn có chắc chắn muốn xóa bài viết này không?");
+      if (confirmed) {
+        deleteMutation.mutate(data._id);
+      }
+    }
+  };
+
+  if (isPending) return "loading...";
+  if (error) return "Something went wrong!" + error.message;
+  if (!data) return "Post not found!";
 
   return (
     <div className="flex flex-col gap-8">
       {/* detail */}
       <div className="flex gap-8">
-        <div className="lg:w-3/5 flex flex-col gap-8">
-          <h1 className="text-xl md:text-3xl xl:text-4xl 2xl:text-5xl font-semibold">
-            {/* {data.title} */}Title
+        <div className="lg:w-3/5 flex flex-col gap-4">
+          <h1 className="text-xl md:text-3xl xl:text-4xl 2xl:text-5xl font-semibold" style={{ lineHeight: '1.5' }}>
+            {data.title}
           </h1>
           <div className="flex items-center gap-2 text-gray-400 text-sm">
-            <span>Written by</span>
-            {/* <Link className="text-blue-800">{data.user.username}</Link> */}
             <span>on</span>
-            {/* <Link className="text-blue-800">{data.category}</Link> */}
-            {/* <span>{format(data.createdAt)}</span> */}
+            <Link className="text-blue-800">{data.category}</Link>
+            <span className="mr-3 ml-3">
+              ({formatTimeAgo(data.createdAt, "vi")})
+            </span>
+            <span>
+              {formatDate(parseISO(data.createdAt), "dd MMMM yyyy", {
+                locale: vi,
+              })}
+            </span>
           </div>
-          {/* <p className="text-gray-500 font-medium">{data.desc}</p> */}
+          <p className="text-gray-500 font-medium">{data.desc}</p>
         </div>
-        {/* {data.img && (
-          <div className="hidden lg:block w-2/5">
-            <Image src={data.img} w="600" className="rounded-2xl" />
+        {data.img && (
+           <div className="hidden lg:block w-2/5">
+            <Image src={data.img} className="float-end w-3/5 rounded-2xl" />
           </div>
-        )} */}
-        <div className="hidden lg:block w-2/5">
-            <Image src='featured1.jpeg' className="w-4/5 rounded-2xl" />
-          </div>
+        )}
       </div>
       {/* content */}
       <div className="flex flex-col md:flex-row gap-12 justify-between">
         {/* text */}
-        <div className="lg:text-lg lg:w-5/6 flex flex-col gap-6 text-justify">
-          <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Alias neque
-            fugiat itaque quas esse sunt cupiditate possimus cumque asperiores,
-            dolorem, dolores eligendi amet perferendis illum repellat nam quam
-            facilis veritatis. Lorem ipsum dolor sit amet consectetur
-            adipisicing elit. Sint ipsa fuga nihil numquam, quam dicta quas
-            exercitationem aliquam maxime quaerat, enim autem culpa sequi at!
-            Earum facere in ducimus culpa. Lorem ipsum dolor sit amet
-            consectetur, adipisicing elit. Libero fuga modi amet error aliquid
-            eos nobis vero soluta facilis, voluptatem, voluptates quod suscipit
-            obcaecati voluptate quaerat laborum, voluptatum dicta ipsum.
-          </p>
-          <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Alias neque
-            fugiat itaque quas esse sunt cupiditate possimus cumque asperiores,
-            dolorem, dolores eligendi amet perferendis illum repellat nam quam
-            facilis veritatis. Lorem ipsum dolor sit amet consectetur
-            adipisicing elit. Sint ipsa fuga nihil numquam, quam dicta quas
-            exercitationem aliquam maxime quaerat, enim autem culpa sequi at!
-            Earum facere in ducimus culpa. Lorem ipsum dolor sit amet
-            consectetur, adipisicing elit. Libero fuga modi amet error aliquid
-            eos nobis vero soluta facilis, voluptatem, voluptates quod suscipit
-            obcaecati voluptate quaerat laborum, voluptatum dicta ipsum.
-          </p>
-          <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Alias neque
-            fugiat itaque quas esse sunt cupiditate possimus cumque asperiores,
-            dolorem, dolores eligendi amet perferendis illum repellat nam quam
-            facilis veritatis. Lorem ipsum dolor sit amet consectetur
-            adipisicing elit. Sint ipsa fuga nihil numquam, quam dicta quas
-            exercitationem aliquam maxime quaerat, enim autem culpa sequi at!
-            Earum facere in ducimus culpa. Lorem ipsum dolor sit amet
-            consectetur, adipisicing elit. Libero fuga modi amet error aliquid
-            eos nobis vero soluta facilis, voluptatem, voluptates quod suscipit
-            obcaecati voluptate quaerat laborum, voluptatum dicta ipsum.
-          </p>
-          <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Alias neque
-            fugiat itaque quas esse sunt cupiditate possimus cumque asperiores,
-            dolorem, dolores eligendi amet perferendis illum repellat nam quam
-            facilis veritatis. Lorem ipsum dolor sit amet consectetur
-            adipisicing elit. Sint ipsa fuga nihil numquam, quam dicta quas
-            exercitationem aliquam maxime quaerat, enim autem culpa sequi at!
-            Earum facere in ducimus culpa. Lorem ipsum dolor sit amet
-            consectetur, adipisicing elit. Libero fuga modi amet error aliquid
-            eos nobis vero soluta facilis, voluptatem, voluptates quod suscipit
-            obcaecati voluptate quaerat laborum, voluptatum dicta ipsum.
-          </p>
-          <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Alias neque
-            fugiat itaque quas esse sunt cupiditate possimus cumque asperiores,
-            dolorem, dolores eligendi amet perferendis illum repellat nam quam
-            facilis veritatis. Lorem ipsum dolor sit amet consectetur
-            adipisicing elit. Sint ipsa fuga nihil numquam, quam dicta quas
-            exercitationem aliquam maxime quaerat, enim autem culpa sequi at!
-            Earum facere in ducimus culpa. Lorem ipsum dolor sit amet
-            consectetur, adipisicing elit. Libero fuga modi amet error aliquid
-            eos nobis vero soluta facilis, voluptatem, voluptates quod suscipit
-            obcaecati voluptate quaerat laborum, voluptatum dicta ipsum.
-          </p>
-          <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Alias neque
-            fugiat itaque quas esse sunt cupiditate possimus cumque asperiores,
-            dolorem, dolores eligendi amet perferendis illum repellat nam quam
-            facilis veritatis. Lorem ipsum dolor sit amet consectetur
-            adipisicing elit. Sint ipsa fuga nihil numquam, quam dicta quas
-            exercitationem aliquam maxime quaerat, enim autem culpa sequi at!
-            Earum facere in ducimus culpa. Lorem ipsum dolor sit amet
-            consectetur, adipisicing elit. Libero fuga modi amet error aliquid
-            eos nobis vero soluta facilis, voluptatem, voluptates quod suscipit
-            obcaecati voluptate quaerat laborum, voluptatum dicta ipsum.
-          </p>
-          <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Alias neque
-            fugiat itaque quas esse sunt cupiditate possimus cumque asperiores,
-            dolorem, dolores eligendi amet perferendis illum repellat nam quam
-            facilis veritatis. Lorem ipsum dolor sit amet consectetur
-            adipisicing elit. Sint ipsa fuga nihil numquam, quam dicta quas
-            exercitationem aliquam maxime quaerat, enim autem culpa sequi at!
-            Earum facere in ducimus culpa. Lorem ipsum dolor sit amet
-            consectetur, adipisicing elit. Libero fuga modi amet error aliquid
-            eos nobis vero soluta facilis, voluptatem, voluptates quod suscipit
-            obcaecati voluptate quaerat laborum, voluptatum dicta ipsum.
-          </p>
+        <div className="lg:text-lg lg:w-5/6 flex flex-col gap-6 text-justify" style={{ lineHeight: '1.8' }}>
+          <div dangerouslySetInnerHTML={{ __html: data.content }} />
         </div>
         {/* menu */}
         <div className="px-4 h-max sticky top-8">
@@ -159,26 +102,19 @@ const SinglePostPage = () => {
               </Link>
           </div>
           </div>
-          <PostMenuAction />
-          <h1 className="mt-8 mb-4 text-sm font-medium">Categories</h1>
-          <div className="flex flex-col gap-2 text-sm">
-            <Link className="underline">Tâm lý học</Link>
-            <Link className="underline">Suy niệm lời Chúa</Link>
-            <Link className="underline">Góc nhà đạo</Link>
-            <Link className="underline">Hội nhập văn hóa</Link>
-            <Link className="underline">Ngôn ngữ và văn chương</Link>
-            <Link className="underline">Đọc truyện</Link>
-            <Link className="underline">Tin tức giáo hội</Link>
-            <Link className="underline">Thư viện</Link>
-            <Link className="underline">Bút ký triết học</Link>
-            <Link className="underline">Chuyện phiếm</Link>
-            <Link className="underline">Thuốc và Sức khỏe</Link>
-            
-          </div>
-          
+          <SideMenu></SideMenu>
+          {isLoaded && isSignedIn && ( // Hiển thị nút xóa bài viết khi người dùng đã đăng nhập
+            <div className="mt-8">
+              <button
+                onClick={handleDelete}
+                className="bg-red-500 text-white font-medium rounded-xl mt-4 p-2 w-36"
+              >
+                Delete Post
+              </button>
+            </div>
+          )}
         </div>
       </div>
-      
     </div>
   );
 };

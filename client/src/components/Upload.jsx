@@ -28,11 +28,11 @@ const Upload = ({ children, type, setProgress, setData }) => {
 
   const onError = (err) => {
     console.log(err);
-    toast.error("Image upload failed!");
+    toast.error("Thất bại!");
   };
   const onSuccess = (res) => {
     console.log(res);
-    toast.success("Image upload success!");
+    toast.success("Tải ảnh lên thành công!");
 
     setData(res);
   };

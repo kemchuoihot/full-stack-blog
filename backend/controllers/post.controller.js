@@ -11,7 +11,6 @@ export const getPosts = async (req, res) => {
     console.log(req.query);
 
     const cat = req.query.cat;
-    // const author = req.query.author;
     const searchQuery = req.query.search;
     const sortQuery = req.query.sort;
     const featured = req.query.featured;
@@ -23,7 +22,6 @@ export const getPosts = async (req, res) => {
     if (searchQuery) {
       query.title = { $regex: searchQuery, $options: "i" };
     }
-
 
     let sortObj = { createdAt: -1 };
 
@@ -74,7 +72,7 @@ export const getPost = async (req, res) => {
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
     }
-    res.status(200).send(post);
+    res.status(200).json(post);
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: err.message });
